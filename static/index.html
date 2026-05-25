@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DB Delay Predictor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'Courier New', monospace;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card {
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 6px;
+      color: #fff;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+      color: #555;
+      margin-bottom: 30px;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      color: #666;
+      margin-bottom: 5px;
+      margin-top: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px 14px;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus {
+      border-color: #e63946;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 24px;
+      padding: 12px;
+      background: #e63946;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover { background: #c1121f; }
+
+    #result {
+      margin-top: 24px;
+      padding: 16px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      display: none;
+      text-align: center;
+    }
+
+    #verdict {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    #prob {
+      font-size: 0.85rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🚆 DB Delay Predictor</h1>
+    <p class="subtitle">Deutsche Bahn · NRW · 1.85M rides analysed</p>
+
+    <label>Hour of departure (0–23)</label>
+    <input type="number" id="hour" min="0" max="23" placeholder="e.g. 8" />
+
+    <label>Day of week</label>
+    <select id="dow">
+      <option value="0">Monday</option>
+      <option value="1">Tuesday</option>
+      <option value="2">Wednesday</option>
+      <option value="3">Thursday</option>
+      <option value="4">Friday</option>
+      <option value="5">Saturday</option>
+      <option value="6">Sunday</option>
+    </select>
+
+    <label>Month</label>
+    <select id="month">
+      <option value="1">January</option>
+      <option value="2">February</option>
+      <option value="3">March</option>
+      <option value="4">April</option>
+      <option value="5">May</option>
+      <option value="6">June</option>
+      <option value="7">July</option>
+      <option value="8">August</option>
+      <option value="9">September</option>
+      <option value="10">October</option>
+      <option value="11">November</option>
+      <option value="12">December</option>
+    </select>
+
+    <label>Train category</label>
+    <select id="category">
+      <option value="1">Category 1</option>
+      <option value="2">Category 2</option>
+      <option value="3">Category 3</option>
+      <option value="4">Category 4</option>
+      <option value="5">Category 5</option>
+    </select>
+
+    <button onclick="predict()">Check Delay Risk</button>
+
+    <div id="result">
+      <div id="verdict"></div>
+      <div id="prob"></div>
+    </div>
+  </div>
+
+  <script>
+    async function predict() {
+      const hour = parseInt(document.getElementById("hour").value);
+      const dow = parseInt(document.getElementById("dow").value);
+      const month = parseInt(document.getElementById("month").value);
+      const category = parseInt(document.getElementById("category").value);
+
+      if (isNaN(hour) || hour < 0 || hour > 23) {
+        alert("Please enter a valid hour (0–23)");
+        return;
+      }
+
+      const res = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hour, day_of_week: dow, month, category })
+      });
+
+      const data = await res.json();
+      document.getElementById("verdict").textContent = data.verdict;
+      document.getElementById("prob").textContent = `${data.delay_probability}% chance of delay`;
+      document.getElementById("result").style.display = "block";
+    }
+  </script>
+</body>
+</html>
